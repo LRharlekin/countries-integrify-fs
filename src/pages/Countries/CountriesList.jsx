@@ -1,5 +1,6 @@
-import * as React from "react";
+import { useState } from "react";
 import PropTypes from "prop-types";
+
 import { alpha } from "@mui/material/styles";
 import Box from "@mui/material/Box";
 import Table from "@mui/material/Table";
@@ -13,7 +14,7 @@ import TableSortLabel from "@mui/material/TableSortLabel";
 import Toolbar from "@mui/material/Toolbar";
 import Typography from "@mui/material/Typography";
 import Paper from "@mui/material/Paper";
-import Checkbox from "@mui/material/Checkbox";
+// import Checkbox from "@mui/material/Checkbox";
 import IconButton from "@mui/material/IconButton";
 import Tooltip from "@mui/material/Tooltip";
 // import FormControlLabel from "@mui/material/FormControlLabel";
@@ -22,31 +23,45 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import FilterListIcon from "@mui/icons-material/FilterList";
 import { visuallyHidden } from "@mui/utils";
 
-function createData(name, calories, fat, carbs, protein) {
-  return {
-    name,
-    calories,
-    fat,
-    carbs,
-    protein,
-  };
-}
+import useFetch from "../../hooks/useFetch";
+import endpoint from "../../utils/endpoint";
+import { dummydata as data } from "../../data/dummydata";
 
-const rows = [
-  createData("Cupcake", 305, 3.7, 67, 4.3),
-  createData("Donut", 452, 25.0, 51, 4.9),
-  createData("Eclair", 262, 16.0, 24, 6.0),
-  createData("Frozen yoghurt", 159, 6.0, 24, 4.0),
-  createData("Gingerbread", 356, 16.0, 49, 3.9),
-  createData("Honeycomb", 408, 3.2, 87, 6.5),
-  createData("Ice cream sandwich", 237, 9.0, 37, 4.3),
-  createData("Jelly Bean", 375, 0.0, 94, 0.0),
-  createData("KitKat", 518, 26.0, 65, 7.0),
-  createData("Lollipop", 392, 0.2, 98, 0.0),
-  createData("Marshmallow", 318, 0, 81, 2.0),
-  createData("Nougat", 360, 19.0, 9, 37.0),
-  createData("Oreo", 437, 18.0, 63, 4.0),
-];
+// function createData(name, calories, fat, carbs, protein) {
+//   return {
+//     name,
+//     calories,
+//     fat,
+//     carbs,
+//     protein,
+//   };
+// }
+
+const rows = data.map(({ name, flag, region, population, area, languages }) => {
+  return {
+    name: name.official,
+    flag: flag.emoji,
+    region,
+    population,
+    languages: languages[0],
+  };
+});
+
+// const rows = [
+//   createData("Cupcake", 305, 3.7, 67, 4.3),
+//   createData("Donut", 452, 25.0, 51, 4.9),
+//   createData("Eclair", 262, 16.0, 24, 6.0),
+//   createData("Frozen yoghurt", 159, 6.0, 24, 4.0),
+//   createData("Gingerbread", 356, 16.0, 49, 3.9),
+//   createData("Honeycomb", 408, 3.2, 87, 6.5),
+//   createData("Ice cream sandwich", 237, 9.0, 37, 4.3),
+//   createData("Jelly Bean", 375, 0.0, 94, 0.0),
+//   createData("KitKat", 518, 26.0, 65, 7.0),
+//   createData("Lollipop", 392, 0.2, 98, 0.0),
+//   createData("Marshmallow", 318, 0, 81, 2.0),
+//   createData("Nougat", 360, 19.0, 9, 37.0),
+//   createData("Oreo", 437, 18.0, 63, 4.0),
+// ];
 
 function descendingComparator(a, b, orderBy) {
   if (b[orderBy] < a[orderBy]) {
@@ -85,37 +100,37 @@ const headCells = [
     id: "name",
     numeric: false,
     disablePadding: true,
-    label: "Dessert (100g serving)",
+    label: "Name",
   },
   {
-    id: "calories",
+    id: "flag",
     numeric: true,
     disablePadding: false,
-    label: "Calories",
+    label: "Flag",
   },
   {
-    id: "fat",
+    id: "region",
     numeric: true,
     disablePadding: false,
-    label: "Fat (g)",
+    label: "Region",
   },
   {
-    id: "carbs",
+    id: "population",
     numeric: true,
     disablePadding: false,
-    label: "Carbs (g)",
+    label: "Population",
   },
   {
-    id: "protein",
+    id: "languages",
     numeric: true,
     disablePadding: false,
-    label: "Protein (g)",
+    label: "Languages",
   },
 ];
 
 function EnhancedTableHead(props) {
   const {
-    onSelectAllClick,
+    // onSelectAllClick,
     order,
     orderBy,
     numSelected,
@@ -129,17 +144,6 @@ function EnhancedTableHead(props) {
   return (
     <TableHead>
       <TableRow>
-        <TableCell padding="checkbox">
-          <Checkbox
-            color="primary"
-            indeterminate={numSelected > 0 && numSelected < rowCount}
-            checked={rowCount > 0 && numSelected === rowCount}
-            onChange={onSelectAllClick}
-            inputProps={{
-              "aria-label": "select all desserts",
-            }}
-          />
-        </TableCell>
         {headCells.map((headCell) => (
           <TableCell
             key={headCell.id}
@@ -169,7 +173,7 @@ function EnhancedTableHead(props) {
 EnhancedTableHead.propTypes = {
   numSelected: PropTypes.number.isRequired,
   onRequestSort: PropTypes.func.isRequired,
-  onSelectAllClick: PropTypes.func.isRequired,
+  // onSelectAllClick: PropTypes.func.isRequired,
   order: PropTypes.oneOf(["asc", "desc"]).isRequired,
   orderBy: PropTypes.string.isRequired,
   rowCount: PropTypes.number.isRequired,
@@ -235,11 +239,11 @@ EnhancedTableToolbar.propTypes = {
 
 export default function CountriesList() {
   // EnhancedTable()
-  const [order, setOrder] = React.useState("asc");
-  const [orderBy, setOrderBy] = React.useState("calories");
-  const [selected, setSelected] = React.useState([]);
-  const [page, setPage] = React.useState(0);
-  const [rowsPerPage, setRowsPerPage] = React.useState(5);
+  const [order, setOrder] = useState("asc");
+  const [orderBy, setOrderBy] = useState("calories");
+  const [selected, setSelected] = useState([]);
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(5);
 
   const handleRequestSort = (event, property) => {
     const isAsc = orderBy === property && order === "asc";
@@ -247,14 +251,14 @@ export default function CountriesList() {
     setOrderBy(property);
   };
 
-  const handleSelectAllClick = (event) => {
-    if (event.target.checked) {
-      const newSelected = rows.map((n) => n.name);
-      setSelected(newSelected);
-      return;
-    }
-    setSelected([]);
-  };
+  // const handleSelectAllClick = (event) => {
+  //   if (event.target.checked) {
+  //     const newSelected = rows.map((n) => n.name);
+  //     setSelected(newSelected);
+  //     return;
+  //   }
+  //   setSelected([]);
+  // };
 
   const handleClick = (event, name) => {
     const selectedIndex = selected.indexOf(name);
@@ -306,7 +310,7 @@ export default function CountriesList() {
               numSelected={selected.length}
               order={order}
               orderBy={orderBy}
-              onSelectAllClick={handleSelectAllClick}
+              // onSelectAllClick={handleSelectAllClick}
               onRequestSort={handleRequestSort}
               rowCount={rows.length}
             />
@@ -327,7 +331,7 @@ export default function CountriesList() {
                       key={row.name}
                       selected={isItemSelected}
                     >
-                      <TableCell padding="checkbox">
+                      {/* <TableCell padding="checkbox">
                         <Checkbox
                           color="primary"
                           checked={isItemSelected}
@@ -335,7 +339,7 @@ export default function CountriesList() {
                             "aria-labelledby": labelId,
                           }}
                         />
-                      </TableCell>
+                      </TableCell> */}
                       <TableCell
                         component="th"
                         id={labelId}
